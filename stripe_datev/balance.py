@@ -33,7 +33,7 @@ def createAccountingRecords(balance_transactions):
       if charge.invoice:
         number = charge.invoice.number
       else:
-        number = charge.receipt_number
+        number = charge.receipt_number or charge.id
       fee_desc = tx.fee_details[0].description
 
       records.append({
@@ -79,7 +79,7 @@ def createAccountingRecords(balance_transactions):
       if charge.invoice:
         number = charge.invoice.number
       else:
-        number = charge.receipt_number
+        number = charge.receipt_number or charge.id
 
       records.append({
         "date": created,

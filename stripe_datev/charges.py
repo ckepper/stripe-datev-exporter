@@ -88,7 +88,7 @@ def createRevenueItems(charges):
 
     revenue_items.append({
       "id": charge.id,
-      "number": charge.receipt_number,
+      "number": charge.receipt_number or charge.id,
       "created": created,
       "amount_net": net_amount,
       "accounting_props": accounting_props,
