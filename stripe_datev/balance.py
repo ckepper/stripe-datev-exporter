@@ -89,6 +89,21 @@ def createAccountingRecords(balance_transactions):
         "Buchungstext": "Stripe Payout {}".format(tx.source.id),
       })
 
+    elif tx["reporting_category"] == "topup":
+      # Mirror image of a payout: money moved from the company bank account into the
+      # Stripe balance. The transit leg is cleared once the outgoing transfer shows up
+      # on the bank statement. A topup_reversal reports the same category with a
+      # negative amount, which flips the Soll/Haben flag.
+      records.append({
+        "date": created,
+        "Umsatz (ohne Soll/Haben-Kz)": output.formatDecimal(abs(amount)),
+        "Soll/Haben-Kennzeichen": "H" if amount >= 0 else "S",
+        "WKZ Umsatz": "EUR",
+        "Konto": str(config.accounts["transit"]),
+        "Gegenkonto (ohne BU-Schlüssel)": str(config.accounts["bank"]),
+        "Buchungstext": "Stripe Topup {}".format(tx.source.id if tx.source else tx.id),
+      })
+
     elif tx["reporting_category"] == "refund":
       charge = tx.source.charge
       cus = customer.retrieveCustomer(charge.customer)
