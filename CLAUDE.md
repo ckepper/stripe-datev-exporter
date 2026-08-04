@@ -116,6 +116,18 @@ Invoice and payment postings use different tax keys (`datev_tax_key_*_invoice` v
 invoice-side key comes from `getAccountingProps` here, the payment-side key is applied in `balance.py`.
 Anomalies are reported as `print("Warning: …")` rather than raising; `download` output is meant to be read.
 
+The **VAT rate is never written into a record** — postings carry the gross with an empty `BU-Schlüssel`,
+so the rate comes entirely from the automatic tax key on the revenue account in the chart of accounts.
+`revenue_german_vat` therefore has to match what Stripe actually charges: PediaPress sells books at the
+reduced rate (`EuropeanUnionVAT.fraction = .07` in the pediapress repo; Stripe checkout tags every line
+item `txcd_35010001` "books 7%"), so this is SKR03 **8300** (Erlöse 7 % USt), not 8400 (19 %). Getting it
+wrong is silent — the export looks correct and DATEV derives the wrong Umsatzsteuer on import.
+
+EU consumers without a VAT ID fall through to `revenue_german_vat` as well (the `tax_exempt == "none"`
+branch, "Unter Bagatellgrenze MOSS"). That is right only while the company stays under the 10,000 EUR
+distance-selling threshold and charges German VAT; crossing it means OSS registration, destination-country
+rates and a separate revenue account per country.
+
 ### Conventions and constraints worth knowing
 
 - Period membership for invoices uses the **finalized** date, not `created`; `listFinalizedInvoices`

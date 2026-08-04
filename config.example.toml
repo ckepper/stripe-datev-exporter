@@ -16,7 +16,10 @@ stripe_fees = "70025"
 sammel_debitor = "10001"
 prap = "990"
 
-revenue_german_vat = "8400"
+# The German revenue account carries its own automatic tax key in DATEV, and the exporter
+# posts the gross against it with an empty BU-Schlüssel — so this account alone decides the
+# VAT rate. SKR03 8300 = Erlöse 7 % USt (reduced rate, e.g. books), 8400 = Erlöse 19 % USt.
+revenue_german_vat = "8300"
 revenue_reverse_charge_eu = "8336"
 account_reverse_charge_world = "8338"
 
