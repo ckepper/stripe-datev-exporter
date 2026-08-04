@@ -36,7 +36,8 @@ def getChargeDescription(charge):
 
 def getChargeRecognitionRange(charge):
   desc = getChargeDescription(charge)
-  created = datetime.fromtimestamp(charge.created, timezone.utc)
+  created = datetime.fromtimestamp(
+    charge.created, timezone.utc).astimezone(config.accounting_tz)
   date_range = dateparser.find_date_range(
     desc, created, tz=config.accounting_tz)
   if date_range is not None:
@@ -75,7 +76,10 @@ def createRevenueItems(charges):
     if description:
       text += " / {}".format(description)
 
-    created = datetime.fromtimestamp(charge.created, timezone.utc)
+    # Like invoices.py, keep record dates in the accounting timezone so the month a
+    # record is filed under always matches its Belegdatum
+    created = datetime.fromtimestamp(
+      charge.created, timezone.utc).astimezone(config.accounting_tz)
     start, end = getChargeRecognitionRange(charge)
 
     charge_amount = decimal.Decimal(charge.amount) / 100

@@ -126,7 +126,7 @@ class StripeDatevCli(object):
 
     records_by_month = {}
     for record in records:
-      month = record["date"].strftime("%Y-%m")
+      month = stripe_datev.output.accountingMonth(record["date"])
       records_by_month[month] = records_by_month.get(month, []) + [record]
 
     for month, records in records_by_month.items():
@@ -348,7 +348,7 @@ class StripeDatevCli(object):
 
     records_by_month = {}
     for record in records:
-      month = record["date"].strftime("%Y-%m")
+      month = stripe_datev.output.accountingMonth(record["date"])
       records_by_month[month] = records_by_month.get(month, []) + [record]
 
     for month in sorted(records_by_month.keys()):
@@ -356,7 +356,7 @@ class StripeDatevCli(object):
       print()
       print(month)
       for record in sorted(records, key=lambda r: [r["date"], r.get("Belegfeld 1", ""), r["Konto"], r["Gegenkonto (ohne BU-Schlüssel)"]]):
-        print(record['date'].strftime("%Y-%m-%d"), record['Umsatz (ohne Soll/Haben-Kz)'], record["Soll/Haben-Kennzeichen"], record['Konto'], record['Gegenkonto (ohne BU-Schlüssel)'], record.get("BU-Schlüssel", "-") or "-", '--', record['Buchungstext'])
+        print(record['date'].astimezone(stripe_datev.config.accounting_tz).strftime("%Y-%m-%d"), record['Umsatz (ohne Soll/Haben-Kz)'], record["Soll/Haben-Kennzeichen"], record['Konto'], record['Gegenkonto (ohne BU-Schlüssel)'], record.get("BU-Schlüssel", "-") or "-", '--', record['Buchungstext'])
 
 if __name__ == '__main__':
   StripeDatevCli().run(sys.argv)

@@ -309,7 +309,7 @@ def createAccountingRecords(revenue_item):
         "WKZ Umsatz": "EUR",
         "Konto": str(config.accounts["prap"]),
         "Gegenkonto (ohne BU-Schlüssel)": accounting_props["revenue_account"],
-        "Buchungstext": "pRAP aus {} / {}".format(date.strftime("%Y-%m"), text),
+        "Buchungstext": "pRAP aus {} / {}".format(output.accountingMonth(date), text),
         "Belegfeld 1": number,
         "EU-Land u. UStID": eu_vat_id,
       })
@@ -337,7 +337,7 @@ def createAccountingRecords(revenue_item):
 
   prap_records_by_month = {}
   for record in prap_records:
-    month = record["date"].strftime("%Y-%m")
+    month = output.accountingMonth(record["date"])
     if month not in prap_records_by_month:
       prap_records_by_month[month] = []
     prap_records_by_month[month].append(record)

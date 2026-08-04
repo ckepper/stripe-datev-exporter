@@ -204,6 +204,13 @@ def formatDateDatev(date):
   return date.astimezone(config.accounting_tz).strftime("%d%m")
 
 
+def accountingMonth(date):
+  # The month a record is filed under has to be derived in the same timezone as its
+  # Belegdatum, otherwise a charge created late in the evening UTC ends up in one
+  # month's Buchungsstapel while carrying a Belegdatum in the next.
+  return date.astimezone(config.accounting_tz).strftime("%Y-%m")
+
+
 def formatDateHuman(date):
   return date.astimezone(config.accounting_tz).strftime("%d.%m.%Y")
 
