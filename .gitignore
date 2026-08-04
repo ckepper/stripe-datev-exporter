@@ -45,3 +45,11 @@ out/*
 out
 
 upload*.sh
+
+# DATEV Debitoren master data written by `list_accounts <file>`
+# (customer names, addresses and e-mail addresses)
+*_accounts.csv
+
+# IDEs
+.idea/
+.vscode/*.local.json
