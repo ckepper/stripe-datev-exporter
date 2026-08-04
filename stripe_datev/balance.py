@@ -18,6 +18,16 @@ def listBalanceTransactions(fromTime, toTime):
   ).auto_paging_iter()
 
 
+def settlesExternally(charge, tx):
+  # PayPal funds go straight into the merchant's PayPal balance and never reach the
+  # Stripe balance: Stripe only debits its processing fee, so the balance transaction
+  # carries amount == 0. The gross has to be booked against a clearing account instead
+  # of the bank account, otherwise the receivable is never cleared.
+  payment_method = (charge.get("payment_method_details", None)
+                    or {}).get("type", None)
+  return payment_method == "paypal" and tx.amount == 0
+
+
 def createAccountingRecords(balance_transactions):
   records = []
   for tx in balance_transactions:
@@ -36,12 +46,19 @@ def createAccountingRecords(balance_transactions):
         number = charge.receipt_number or charge.id
       fee_desc = tx.fee_details[0].description
 
+      if settlesExternally(charge, tx):
+        settlement_account = str(config.accounts["paypal"])
+        settled_amount = decimal.Decimal(charge.amount_captured) / 100
+      else:
+        settlement_account = str(config.accounts["bank"])
+        settled_amount = amount
+
       records.append({
         "date": created,
-        "Umsatz (ohne Soll/Haben-Kz)": output.formatDecimal(abs(amount)),
-        "Soll/Haben-Kennzeichen": "S" if amount >= 0 else "H",
+        "Umsatz (ohne Soll/Haben-Kz)": output.formatDecimal(abs(settled_amount)),
+        "Soll/Haben-Kennzeichen": "S" if settled_amount >= 0 else "H",
         "WKZ Umsatz": "EUR",
-        "Konto": str(config.accounts["bank"]),
+        "Konto": settlement_account,
         "Gegenkonto (ohne BU-Schlüssel)": accounting_props["customer_account"],
         "BU-Schlüssel": accounting_props["datev_tax_key_payment"],
         "Buchungstext": "Stripe Payment ({})".format(charge.id),
@@ -81,12 +98,19 @@ def createAccountingRecords(balance_transactions):
       else:
         number = charge.receipt_number or charge.id
 
+      if settlesExternally(charge, tx):
+        settlement_account = str(config.accounts["paypal"])
+        refunded_amount = decimal.Decimal(tx.source.amount) / 100
+      else:
+        settlement_account = str(config.accounts["bank"])
+        refunded_amount = -amount
+
       records.append({
         "date": created,
-        "Umsatz (ohne Soll/Haben-Kz)": output.formatDecimal(-amount),
+        "Umsatz (ohne Soll/Haben-Kz)": output.formatDecimal(refunded_amount),
         "Soll/Haben-Kennzeichen": "H",
         "WKZ Umsatz": "EUR",
-        "Konto": str(config.accounts["bank"]),
+        "Konto": settlement_account,
         "Gegenkonto (ohne BU-Schlüssel)": accounting_props["customer_account"],
         "Buchungstext": "Stripe Payment Refund ({})".format(charge.id),
         "Belegfeld 1": number,
